@@ -1,8 +1,8 @@
 from numpy import random
 
-import Utils
+import utils
 from BetaDistribution import BetaDistribution
-from Utils import show_all
+from utils import show_all
 import copy
 
 def inference(beta, data):
@@ -30,7 +30,7 @@ def plot_cdf(data):
 
 def experiment_cdf():
     # plot the prior with an initial likelihood
-    data = Utils.data_serial(0.4, 5)
+    data = utils.data_serial(0.4, 5)
     plot_cdf(data)
 
 def experiment_pdf(data, color):
@@ -47,6 +47,6 @@ def experiment_pdf(data, color):
 
 experiment_cdf()
 # Collect data in an oredered list, first 20% of values=1 and then 80% of values=0
-experiment_pdf(data=Utils.data_serial(success_prob=0.2, size=400), color='r')
+experiment_pdf(data=utils.data_serial(success_prob=0.2, size=400), color='r')
 # Collect data in an shuffled list
-experiment_pdf(data=Utils.random_list(success_prob=0.2, size=400), color='r')
+experiment_pdf(data=utils.random_list(success_prob=0.2, size=400), color='r')
