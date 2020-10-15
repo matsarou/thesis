@@ -1,9 +1,12 @@
+import random
+
 import numpy as np
 import scipy as sp
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import beta
+from copy import copy
 
 from scipy.stats import norm, binom
 
@@ -18,15 +21,40 @@ def bionomial_pmf(x, n, p):
     binomial = binom.pmf(x, n, p)
     return binomial
 
-def sampler(data, samples=4, mu_init=.5, proposal_width=.5, plot=False, mu_prior_mu=0, mu_prior_sd=1.):
+def sampler(samples=4, mu_init=.5, plot=False):
+    if plot:
+        design_plots()
+    tune_param = 0.5
+    acceptance_rate = 0
+    while tune_param <= 10 and (acceptance_rate < 0.2 or acceptance_rate > 0.5):
+        acceptance_rate, posterior = construct_posterior(tune_param, mu_init, samples)
+        if plot:
+            plot_trace(trace=posterior, label='rate='+str(acceptance_rate*100)+'%, b='+str(tune_param))
+        tune_param += 0.5
+    if tune_param == 10.5:
+        print("We didn't construct the best posterior trace.")
+    print("Acceptance_rate is {}%".format(acceptance_rate*100))
+    print("The variance parameter is ", tune_param-0.5)
+    plt.show()
+    return np.array(posterior)
+
+
+def design_plots():
+    plt.figure(1)
+    plt.ylabel('posterior')
+    plt.xlabel('samples')
+    plt.title('Trace')
+
+
+def construct_posterior(variance_param, mu_init, samples):
     p_current = mu_init
     posterior = [p_current]
+    accepted = 0
     for i in range(samples):
         # suggest a second vale for p. We have a beta distribution that is centered over our current value, we can draw
         # a random value from it
-        param_b = 3
-        a = param_b * p_current / (1 - p_current)
-        p_proposal = np.random.beta(a, 3, size=1)[0]
+        a = variance_param * p_current / (1 - p_current)
+        p_proposal = np.random.beta(a, variance_param, size=1)[0]
 
         # Compute likelihood by multiplying probabilities of each data point
         n = 1
@@ -47,16 +75,14 @@ def sampler(data, samples=4, mu_init=.5, proposal_width=.5, plot=False, mu_prior
         # Usually would include prior probability, which we neglect here for simplicity
         accept = np.random.rand() < p_accept
 
-        if plot:
-            plot_proposal(p_current, p_proposal, mu_prior_mu, mu_prior_sd, data, accept, posterior, i)
-
         if accept:
             # Update position
             p_current = p_proposal
-
+            accepted += 1
         posterior.append(p_current)
-    plt.show()
-    return np.array(posterior)
+    acceptance_rate = accepted / samples
+    return acceptance_rate, posterior
+
 
 def calc_posterior_analytical(data, x, mu_0, sigma_0):
     sigma = 1.
@@ -65,63 +91,13 @@ def calc_posterior_analytical(data, x, mu_0, sigma_0):
     sigma_post = (1. / sigma_0**2 + n / sigma**2)**-1
     return norm(mu_post, np.sqrt(sigma_post)).pdf(x)
 
-# Function to display
-def plot_proposal(mu_current, mu_proposal, mu_prior_mu, mu_prior_sd, data, accepted, trace, i):
-    from copy import copy
+def plot_trace(trace, label):
+    plt.figure(1)
     trace = copy(trace)
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4, figsize=(16, 4))
-    fig.suptitle('Iteration %i' % (i + 1))
-    x = np.linspace(-3, 3, 5000)
-    color = 'g' if accepted else 'r'
-
-    # Plot prior
-    prior_current = norm(mu_prior_mu, mu_prior_sd).pdf(mu_current)
-    prior_proposal = norm(mu_prior_mu, mu_prior_sd).pdf(mu_proposal)
-    prior = norm(mu_prior_mu, mu_prior_sd).pdf(x)
-    ax1.plot(x, prior)
-    ax1.plot([mu_current] * 2, [0, prior_current], marker='o', color='b')
-    ax1.plot([mu_proposal] * 2, [0, prior_proposal], marker='o', color=color)
-    ax1.annotate("", xy=(mu_proposal, 0.2), xytext=(mu_current, 0.2),
-                 arrowprops=dict(arrowstyle="->", lw=2.))
-    ax1.set(ylabel='Probability Density', title='current: prior(mu=%.2f) = %.2f\nproposal: prior(mu=%.2f) = %.2f' % (
-    mu_current, prior_current, mu_proposal, prior_proposal))
-
-    # Likelihood
-    likelihood_current = norm(mu_current, 1).pdf(data).prod()
-    likelihood_proposal = norm(mu_proposal, 1).pdf(data).prod()
-    y = norm(loc=mu_proposal, scale=1).pdf(x)
-    sns.distplot(data, kde=False, norm_hist=True, ax=ax2)
-    ax2.plot(x, y, color=color)
-    ax2.axvline(mu_current, color='b', linestyle='--', label='mu_current')
-    ax2.axvline(mu_proposal, color=color, linestyle='--', label='mu_proposal')
-    # ax2.title('Proposal {}'.format('accepted' if accepted else 'rejected'))
-    ax2.annotate("", xy=(mu_proposal, 0.2), xytext=(mu_current, 0.2),
-                 arrowprops=dict(arrowstyle="->", lw=2.))
-    ax2.set(title='likelihood(mu=%.2f) = %.2f\nlikelihood(mu=%.2f) = %.2f' % (
-    mu_current, 1e14 * likelihood_current, mu_proposal, 1e14 * likelihood_proposal))
-
-    # Posterior
-    posterior_analytical = calc_posterior_analytical(data, x, mu_prior_mu, mu_prior_sd)
-    ax3.plot(x, posterior_analytical)
-    posterior_current = calc_posterior_analytical(data, mu_current, mu_prior_mu, mu_prior_sd)
-    posterior_proposal = calc_posterior_analytical(data, mu_proposal, mu_prior_mu, mu_prior_sd)
-    ax3.plot([mu_current] * 2, [0, posterior_current], marker='o', color='b')
-    ax3.plot([mu_proposal] * 2, [0, posterior_proposal], marker='o', color=color)
-    ax3.annotate("", xy=(mu_proposal, 0.2), xytext=(mu_current, 0.2),
-                 arrowprops=dict(arrowstyle="->", lw=2.))
-    # x3.set(title=r'prior x likelihood $\propto$ posterior')
-    ax3.set(title='posterior(mu=%.2f) = %.5f\nposterior(mu=%.2f) = %.5f' % (
-    mu_current, posterior_current, mu_proposal, posterior_proposal))
-
-    if accepted:
-        trace.append(mu_proposal)
-    else:
-        trace.append(mu_current)
-    ax4.plot(trace)
-    ax4.set(xlabel='iteration', ylabel='mu', title='trace')
-    plt.tight_layout()
-    # plt.legend()
-    # plt.show()
+    # x = np.linspace(0, 9, 9)
+    color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
+    plt.plot(trace, marker='o', color=color, label=label)
+    plt.legend(numpoints=1, loc='upper right')
 
 
 transition_model = lambda x: [x[0],np.random.normal(x[1],0.5,(1,))]
@@ -129,5 +105,5 @@ print("transition_model = ", transition_model)
 
 data = np.random.randn(20)
 np.random.seed(123)
-posterior_approximate = sampler(data, samples=8, mu_init=0.5, plot=True)
+posterior_approximate = sampler(samples=8, mu_init=0.5, plot=True)
 print(posterior_approximate)
