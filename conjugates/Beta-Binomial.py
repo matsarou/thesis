@@ -1,7 +1,7 @@
 from numpy import random
 
 import utils
-from BetaDistribution import BetaDistribution
+from distributions.BetaDistribution import BetaDistribution
 from utils import show_all
 import copy
 
