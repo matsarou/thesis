@@ -90,3 +90,16 @@ class GammaPoisson(GammaExponential):
     def sample(self):
         lamda = np.random.gamma(self.alpha, 1/self.beta)
         return np.random.poisson(lamda)
+
+class Gamma():
+    def __init__(self, a=0, b=1):
+        self.alpha = a
+        self.beta = b
+
+    def sample(self):
+        lamda = np.random.gamma(self.alpha, 1 / self.beta)
+        return lamda
+        # return np.random.exponential(1 / lamda)
+
+    def update(self):
+        pass

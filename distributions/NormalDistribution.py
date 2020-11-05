@@ -90,3 +90,15 @@ class NormalLogNormalKnownVar(NormalNormalKnownVar):
 
     def sample(self):
         raise np.log(np.random.normal(self.mean, self.var + self.known_var))
+
+
+class Normal():
+    def __init__(self, prior_mean=0, prior_var=1):
+        self.mean = prior_mean
+        self.var = prior_var
+
+    def sample(self):
+        return np.random.normal(self.mean, self.var)
+
+    def update(self):
+        pass
