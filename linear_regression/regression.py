@@ -16,6 +16,7 @@ def calculate_prediction_error(observation, predictor, b0,b1):
 
 
 df = pd.read_csv('data.csv', sep=',')
+print(df.head(20))
 # box_plot(df)
 # visuals.pairplot(df, ['IQ','Years in School','Grit'], ['Success'])
 # plt.show()

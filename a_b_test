@@ -1,0 +1,57 @@
+from scipy.stats import beta
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+class Beta():
+    def __init__(self):
+        self.b = 1
+        self.a = 1
+
+    def update(self, batch):
+        n = len(batch)
+        x = sum(batch)
+        self.a += x
+        self.b += n - x
+
+    def plot(self, color='b', alpha=1):
+        span = np.linspace(0, 1, 200)
+        density = beta.pdf(span, self.a, self.b)
+        plt.plot(span, density, color=color, alpha=alpha)
+
+
+mabs = {'m1': {'prob': 0.25,
+               'array': [1 if i <= 0.25 else 0 for i in np.random.random(100)],
+               'machine': Beta(),
+               'color': 'r'
+               }
+        # 'm2': {'prob': 0.5,
+        #        'array': [1 if i <= 0.5 else 0 for i in np.random.random(100)],
+        #        'machine': Beta(),
+        #        'color': 'b'
+        #        },
+        # 'm3': {'prob': 0.75,
+        #        'array': [1 if i <= 0.75 else 0 for i in np.random.random(100)],
+        #        'machine': Beta(),
+        #        'color': 'g'
+        #        }
+        }
+
+
+def mab_experiment(machine, prop=0.2):
+    size = len(machine['array'])
+    window = int(size * prop)
+    batches = [batch for batch in range(0, size, window)]
+    for i in range(1, window):
+        try:
+            curr = batches[i]
+            prev = batches[i - 1]
+            machine['machine'].plot(alpha=curr / size, color=machine['color'])
+            batch = machine['array'][prev:curr]
+            machine['machine'].update(batch)
+        except:
+            pass
+    plt.show()
+
+
+mab_experiment(mabs['m1'])
