@@ -39,7 +39,8 @@ class GammaExponential:
             raise SyntaxError("Illegal number of arguments")
 
     def pdf(self, x):
-        return stats.gamma.pdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
+        # return stats.gamma.pdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
+        return stats.gamma.pdf(x, self.alpha, scale=1.0 / self.beta)
 
     def cdf(self, x):
         return 1 - stats.gamma.cdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
@@ -98,8 +99,7 @@ class Gamma():
 
     def sample(self):
         lamda = np.random.gamma(self.alpha, 1 / self.beta)
-        return lamda
-        # return np.random.exponential(1 / lamda)
+        return np.random.exponential(1 / lamda)
 
     def update(self):
         pass

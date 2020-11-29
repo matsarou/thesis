@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 class BetaDistribution:
 
-    def __init__(self):
-        self.a = 1
-        self.b = 1
+    def __init__(self, a=1, b=1):
+        self.a = a
+        self.b = b
         self.n = 0
         self.data = []
         # self.span = np.linspace(0, 1, 200)
@@ -70,6 +70,9 @@ class BetaDistribution:
         std_err = stats.sem(self.data)
         h = std_err * stats.t.ppf((1 + confidence) / 2, n - 1)
         return m - h, m + h
+
+    def sample(self):
+        return np.random.beta(self.a, self.b)
 
     def show_plot(self, params):
         plt.plot(self.span, self.cdf(), alpha = 1.0, color=params['color'], label=params['label'])

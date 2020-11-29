@@ -1,109 +1,76 @@
-import random
-
 import numpy as np
-import scipy as sp
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy.stats import beta
-from copy import copy
+from scipy.stats import binom
 
-from scipy.stats import norm, binom
-
-from BetaDistribution import BetaDistribution
-
-sns.set_style('white')
-sns.set_context('talk')
-
-np.random.seed(123)
+from distributions.BetaDistribution import BetaDistribution
+from mcmc import MCMC
 
 def bionomial_pmf(x, n, p):
     binomial = binom.pmf(x, n, p)
     return binomial
 
-def sampler(samples=4, mu_init=.5, plot=False):
-    if plot:
-        design_plots()
-    tune_param = 0.5
-    acceptance_rate = 0
-    while tune_param <= 10 and (acceptance_rate < 0.2 or acceptance_rate > 0.5):
-        acceptance_rate, posterior = construct_posterior(tune_param, mu_init, samples)
-        if plot:
-            plot_trace(trace=posterior, label='rate='+str(acceptance_rate*100)+'%, b='+str(tune_param))
-        tune_param += 0.5
-    if tune_param == 10.5:
-        print("We didn't construct the best posterior trace.")
-    print("Acceptance_rate is {}%".format(acceptance_rate*100))
-    print("The variance parameter is ", tune_param-0.5)
-    plt.show()
-    return np.array(posterior)
+def get_moment_0(moment_1,mean):
+    return moment_1*mean/(1-mean)
 
+def get_correction_factor(params):
+    numerator=params.get("beta current").pdf(params.get("p_proposed"))
+    denominator=params.get("beta proposed").pdf(params.get("p_current"))
+    return numerator, denominator
 
-def design_plots():
-    plt.figure(1)
-    plt.ylabel('posterior')
-    plt.xlabel('samples')
-    plt.title('Trace')
+class MCMC_Hastings(MCMC.Engine):
+    def construct_posterior(self, variance_param, mu_init, trials, prior):
+        mu_current = mu_init
+        posterior = [mu_current]
+        accepted = 0
+        for i in range(trials):
+            # Prior
+            prior_current = prior.pdf(mu_current)
 
+            # Compute likelihood by multiplying probabilities of each data point
+            n = 1
+            likelihood_current = bionomial_pmf(1, n, mu_current).prod()
+            # posterior density of observing the data under the hypothesis that p_c=mu_current
+            posterior_current = likelihood_current * prior_current
 
-def construct_posterior(variance_param, mu_init, samples):
-    p_current = mu_init
-    posterior = [p_current]
-    accepted = 0
-    for i in range(samples):
-        # suggest a second vale for p. We have a beta distribution that is centered over our current value, we can draw
-        # a random value from it
-        a = variance_param * p_current / (1 - p_current)
-        p_proposal = np.random.beta(a, variance_param, size=1)[0]
+            # suggest a second vale for p. We have a beta distribution that is centered over our current value, we can draw
+            # a random value from it
+            # a = variance_param * mu_current / (1 - mu_current)
+            beta_center_p_current=BetaDistribution(get_moment_0(3, mu_current), 3)
+            mu_proposal = beta_center_p_current.sample()
+            prior_proposal = prior.pdf(mu_proposal)
+            likelihood_proposal = bionomial_pmf(1, n, mu_proposal).prod()
+            posterior_proposed = likelihood_proposal * prior_proposal
 
-        # Compute likelihood by multiplying probabilities of each data point
-        n = 1
-        likelihood_current = bionomial_pmf(1, n, p_current)
-        likelihood_proposal = bionomial_pmf(1, n, p_proposal)
+            # Accept proposal?
+            beta_center_p_proposed = BetaDistribution(get_moment_0(3, mu_proposal), 3)
+            params={
+                "p_current":mu_current,
+                "beta current":beta_center_p_current,
+                "p_proposed":mu_proposal,
+                "beta proposed": beta_center_p_proposed
+            }
+            numerator, denominator = get_correction_factor(params)
+            ratio = posterior_proposed*numerator / posterior_current*denominator
 
-        # Compute prior probability of current and proposed mu
-        rv = beta(0.5, 0.5)
-        prior_current = rv.pdf(p_current)
-        prior_proposal = rv.pdf(p_proposal)
+            # compare a random number from the uniform U(0,1) with the rate p_accept
+            random = np.random.uniform(0, 1, 1)
+            p_move = min(ratio, 1.0)
+            accept = random < p_move
 
-        posterior_current = likelihood_current * prior_current
-        posterior_proposed = likelihood_proposal * prior_proposal
-
-        # Accept proposal?
-        p_accept = posterior_proposed / posterior_current
-
-        # Usually would include prior probability, which we neglect here for simplicity
-        accept = np.random.rand() < p_accept
-
-        if accept:
-            # Update position
-            p_current = p_proposal
-            accepted += 1
-        posterior.append(p_current)
-    acceptance_rate = accepted / samples
-    return acceptance_rate, posterior
-
-
-def calc_posterior_analytical(data, x, mu_0, sigma_0):
-    sigma = 1.
-    n = len(data)
-    mu_post = (mu_0 / sigma_0**2 + data.sum() / sigma**2) / (1. / sigma_0**2 + n / sigma**2)
-    sigma_post = (1. / sigma_0**2 + n / sigma**2)**-1
-    return norm(mu_post, np.sqrt(sigma_post)).pdf(x)
-
-def plot_trace(trace, label):
-    plt.figure(1)
-    trace = copy(trace)
-    # x = np.linspace(0, 9, 9)
-    color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
-    plt.plot(trace, marker='o', color=color, label=label)
-    plt.legend(numpoints=1, loc='upper right')
-
+            if accept:
+                # Update position
+                mu_current = mu_proposal
+                accepted += 1
+            posterior.append(mu_current)
+        acceptance_rate = accepted / trials
+        return acceptance_rate, posterior
 
 transition_model = lambda x: [x[0],np.random.normal(x[1],0.5,(1,))]
 print("transition_model = ", transition_model)
 
 data = np.random.randn(20)
 np.random.seed(123)
-posterior_approximate = sampler(samples=8, mu_init=0.5, plot=True)
+mcmc=MCMC_Hastings()
+prior = beta(0.5, 0.5)
+posterior_approximate = mcmc.sampler(samples=8, mu_init=0.5, prior=prior, plot=True)
 print(posterior_approximate)

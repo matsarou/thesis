@@ -99,6 +99,7 @@ class Normal():
 
     def sample(self):
         return np.random.normal(self.mean, self.var)
+        # return np.random.normal(0, 0.1)
 
     def update(self):
         pass
