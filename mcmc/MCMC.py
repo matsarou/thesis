@@ -3,12 +3,6 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-def design_plots():
-    plt.figure(1)
-    plt.ylabel('posterior')
-    plt.xlabel('samples')
-    plt.title('Trace')
-
 def plot_trace(trace, label):
     plt.figure(1)
     trace = copy(trace)
@@ -20,26 +14,30 @@ def plot_trace(trace, label):
 class Engine():
     def __init__(self):
         print("Initiate ",self)
+        self.init_dataset()
 
-    def sampler(self, samples=4, mu_init=.5, prior=None, plot=False):
+    def sampler(self, trials=4, mu_init=.5, prior=None, tune_param = 0.5, max_tune_param=10.0, data=None, plot=False):
         if plot:
-            design_plots()
-        tune_param = 0.5
+            self.plot_characteristics()
         acceptance_rate = 0
-        while tune_param <= 10 and (acceptance_rate < 0.2 or acceptance_rate > 0.5):
-            acceptance_rate, posterior = self.construct_posterior(tune_param, mu_init, samples, prior)
+        while tune_param <= max_tune_param and (acceptance_rate < 0.2 or acceptance_rate > 0.5):
+            acceptance_rate, traces = self.construct_trace(tune_param, mu_init, trials, prior, data)
             if plot:
-                plot_trace(trace=posterior, label='rate=' + str(acceptance_rate * 100) + '%, b=' + str(tune_param))
+                plot_trace(trace=traces, label='rate=' + str(acceptance_rate * 100) + '%, b=' + str(tune_param))
             tune_param += 0.5
-        if tune_param == 10.5:
+        if tune_param == max_tune_param+0.5:
             print("We didn't construct the best posterior trace.")
         print("Acceptance_rate is {}%".format(acceptance_rate * 100))
         print("The variance parameter is ", tune_param - 0.5)
         plt.show()
-        return np.array(posterior)
+        return np.array(traces)
 
-    def construct_posterior(self, tune_param, mu_init, samples, prior):
+    def construct_trace(self, tune_param, mu_init, samples, prior, data):
         pass
 
+    def init_dataset(self):
+        pass
 
+    def plot_characteristics(self):
+        pass
 

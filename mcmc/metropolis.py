@@ -1,9 +1,13 @@
 import numpy as np
 from scipy.stats import poisson
 import pandas as pd
+
+import utils
 from distributions.GammaDistribution import GammaExponential
 from distributions.NormalDistribution import Normal
 import matplotlib.pyplot as plt
+
+from mcmc import MCMC
 
 
 def poisson_pmf(x, l):
@@ -20,11 +24,15 @@ def likelihood_product(data, p, n, pmf):
     else:
         return pmf(data, p, n).prod()
 
-class MCMC_Metropolis():
-    def __init__(self,trials, data):
-        self.init_dataset(trials, data)
+class MCMC_Metropolis(MCMC.Engine):
 
-    def init_dataset(self,trials, data):
+    def plot_characteristics(self):
+        plt.figure(1)
+        plt.ylabel('current λ')
+        plt.xlabel('Trial')
+        plt.title('Trace')
+
+    def init_dataset(self):
         self.trials = []
         self.data = []
 
@@ -44,44 +52,10 @@ class MCMC_Metropolis():
         self.random = []
         self.l_accepted = []
 
-    def csv_results(self):
-        data = {'Trial': self.trials,
-                'Data': self.data ,
-                'a0': self.prior_param_alpha,
-                'b0': self.prior_param_beta,
-                'Posterior current': self.p_current,
-                'λ current': self.l_current,
-                'Posterior proposed': self.p_proposed,
-                'λ proposed': self.l_proposed,
-                'Ratio': self.ratio ,
-                'p_move': self.p_move,
-                'Random': self.random,
-                'λ accepted': self.l_accepted
-                }
-        df = pd.DataFrame(data, columns=data.keys())
-        df.to_csv('shark_attack_mcmc.csv')
-
-    def sampler(self, trials=4, mu_init=.5, plot=False, prior=GammaExponential(1.0, 1.0), data=[]):
-        # if plot:
-        #     design_plots()
-        tune_param = 0.5
-        acceptance_rate = 0
-        while tune_param <= 10 and (acceptance_rate < 0.2 or acceptance_rate > 0.5):
-            acceptance_rate, posterior = self.construct_posterior(tune_param, mu_init, trials, prior, data)
-            # if plot:
-            #     plot_trace(trace=posterior, label='rate=' + str(acceptance_rate * 100) + '%, b=' + str(tune_param))
-            tune_param += 0.5
-        if tune_param == 10.5:
-            print("We didn't construct the best posterior trace.")
-        print("Acceptance_rate is {}%".format(acceptance_rate * 100))
-        print("The variance parameter is ", tune_param - 0.5)
-        # plt.show()
-        return np.array(posterior)
-
-    def construct_posterior(self, variance_param, p_init, trials, prior, data):
+    def construct_trace(self, variance_param, p_init, trials, prior, data):
         l_current = p_init
-        posterior = [l_current]
-        self.init_dataset(trials, data)
+        trace = [l_current]
+        self.init_dataset()
         accepted = 0
         for trial in range(1, trials+1, 1):
             # Compute posterior probability of current mu
@@ -112,7 +86,7 @@ class MCMC_Metropolis():
                 # If the random number is less than the p_move,accept the proposed value of λ.
                 l_current = l_proposal
                 accepted += 1
-            posterior.append(l_current)
+            trace.append(l_current)
 
             #Build the dataset for demonstration reasons
             self.trials.append(trial)
@@ -128,7 +102,7 @@ class MCMC_Metropolis():
             self.random.append(random)
             self.l_accepted.append(l_current)
         acceptance_rate = accepted / trials
-        return acceptance_rate, posterior
+        return acceptance_rate, trace
 
 def plot_prior(prior, hypos):
     label = 'a0=' + str(prior.alpha) + ', b0=' + str(prior.beta)
@@ -145,8 +119,22 @@ data = np.random.randint(0,20,35)
 data=[5]
 mu_init = prior.sample()
 trials=100
-mcmc=MCMC_Metropolis(trials, data)
+mcmc=MCMC_Metropolis()
 
-posterior_approximate = mcmc.sampler(trials=100, mu_init=mu_init, plot=True, prior=prior, data=data)
-print(posterior_approximate)
-mcmc.csv_results()
+final_mcmc_trace = mcmc.sampler(trials=10, mu_init=mu_init, plot=True, prior=prior, data=data)
+print(final_mcmc_trace)
+
+data = {'Trial': mcmc.trials,
+        'Data': mcmc.data,
+        'a0': mcmc.prior_param_alpha,
+        'b0': mcmc.prior_param_beta,
+        'Posterior current': mcmc.p_current,
+        'λ current': mcmc.l_current,
+        'Posterior proposed': mcmc.p_proposed,
+        'λ proposed': mcmc.l_proposed,
+        'Ratio': mcmc.ratio,
+        'p_move': mcmc.p_move,
+        'Random': mcmc.random,
+        'λ accepted': mcmc.l_accepted
+        }
+utils.export_csv(filepath='shark_attack_mcmc.csv', data=data)

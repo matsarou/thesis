@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy.stats import norm
 
 from distributions.NormalDistribution import NormalNormalKnownVar
@@ -47,6 +48,10 @@ def plot_scatterplot(x, y, color):
     plt.xlabel('hypothesis for  mean')
     plt.ylabel('hypothesis for st.dev')
     plt.show()
+
+def export_csv(filepath, data):
+    df = pd.DataFrame(data, columns=data.keys())
+    df.to_csv(filepath)
 
 def plot_normal_pdf(pdfs, mu, color='b'):
     alpha = 0.0

@@ -30,8 +30,11 @@ class BetaDistribution:
     def stdev(self):
         return stats.moment(self.data, 2) * self.n
 
-    def pdf(self):
-        return stats.beta.pdf(self.span, self.a, self.b)
+    def pdf(self, x):
+        return stats.beta.pdf(x, self.a, self.b)
+
+    # def pdf(self):
+    #     return stats.beta.pdf(self.span, self.a, self.b)
 
     def ppf(self, x):
         return stats.beta.ppf(x, self.a, self.b)
