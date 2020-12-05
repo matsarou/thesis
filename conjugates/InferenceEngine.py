@@ -7,7 +7,10 @@ class Engine():
     def inference(self, pdf, data):
         pdfs = []
         size = len(data)
-        window = int(size / 4)
+        if(size>4):
+            window = int(size / 4)
+        else:
+            window=4
         batches = [batch for batch in range(0, size, window)]
         for i in range(1, len(batches)):
             curr = batches[i]

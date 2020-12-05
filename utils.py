@@ -2,7 +2,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
+from scipy.stats import norm, gamma
 
 from distributions.NormalDistribution import NormalNormalKnownVar
 
@@ -39,6 +39,10 @@ def normal_data(mean, stdev, size):
     data = norm.rvs(10.0, 2.5, size=500)
     return data
 
+def gamma_data(gamma, size):
+    data = gamma.rvs(size=size)
+    return data
+
 def plot_scatterplot(x, y, color):
     for i in range(10):
         txt='H'+str(i+1)+'=('+str(x[i])+','+str(y[i])+')'
@@ -60,6 +64,17 @@ def plot_normal_pdf(pdfs, mu, color='b'):
         label = 'mean=' + str(pdf.mean) + ', var=' + str(pdf.var)
         alpha = alpha + (i+1)*0.10
         plt.plot(pdf.pdf(mu), alpha = alpha, color=color, label=label)
+    plt.ylabel('density')
+    plt.xlabel('conversion rate')
+    plt.legend(numpoints=1, loc='upper right')
+    plt.show()
+
+def plot_gamma_pdf(pdfs, X, color='b'):
+    alpha = 1.0
+    for i in range(len(pdfs)):
+        pdf = pdfs[i]
+        label = 'a=' + str(pdf.alpha) + ', var=' + str(pdf.beta)
+        plt.plot(X, pdf.pdf(X), alpha = alpha, color=color, label=label)
     plt.ylabel('density')
     plt.xlabel('conversion rate')
     plt.legend(numpoints=1, loc='upper right')

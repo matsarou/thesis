@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 from scipy import stats
 
@@ -40,7 +41,10 @@ class GammaExponential:
 
     def pdf(self, x):
         # return stats.gamma.pdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
-        return stats.gamma.pdf(x, self.alpha, scale=1.0 / self.beta)
+        return stats.gamma.pdf(x, self.alpha, scale=self.beta)
+
+    def ppf(self, x):
+        return stats.gamma.ppf(x, self.alpha, self.beta)
 
     def cdf(self, x):
         return 1 - stats.gamma.cdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
@@ -70,6 +74,9 @@ class GammaExponential:
 
     def predict(self, x):
         return stats.lomax.cdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
+
+    def rvs(self, size=0):
+        return numpy.random.gamma(self.alpha, scale=1.0 / self.beta, size=size)
 
     def sample(self):
         lamda = np.random.gamma(self.alpha, 1/self.beta)
