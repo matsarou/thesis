@@ -1,9 +1,9 @@
 import scipy
 from scipy.stats import poisson
-from seaborn import barplot
+import conjugates.gamma_poisson as shortcut
 
 import utils
-from distributions.GammaDistribution import GammaExponential
+from distributions.GammaDistribution import GammaExponential, Gamma
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -25,7 +25,7 @@ def plot_gamma_distribution(hypotheses, a, b):
     gamma = GammaExponential(alpha=a, beta=b)
     label = 'a=' + str(a) + ', b=' + str(b)
     plt.plot(gamma.pdf(hypotheses), alpha=1.0, color='b', label=label)
-    plt.ylabel('density')
+    plt.ylabel('Density')
     plt.xlabel('Hypotheses for λ')
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
@@ -47,7 +47,27 @@ a0=2.1
 b0=1.0
 # plot_gamma_distribution(hypotheses,a0,b0)
 
-#Collect our data. This year we observed 5 shark attack
+#Collect our data. This year we observed 5 shark attack. Plot the likelihood
 data=[5]
-# hypotheses= [20,20,2,20,13,13,17,14,19,19.5,16,14,20,12,18,16,20,19,19,20]
-plot_poisson_pmf(hypotheses, 5)
+# plot_poisson_pmf(hypotheses, 5)
+
+#Compute the posterior
+#Approach 1:Shortcuts
+x = np.linspace(0, 300, 100)
+gamma_prior = GammaExponential(alpha=a0,beta=b0)
+engine = shortcut.GammaPoisson()
+pdfs = []
+# Add the uniform
+pdfs.append(gamma_prior)
+# Inference
+posterior_pdf1=gamma_prior.update(data)
+pdfs.append(posterior_pdf1)
+
+# shortcut.plot_gamma_pdf(pdfs, x, 'b')
+
+data=[1,2,0,3,4]
+posterior_pdf2=pdfs[len(pdfs)-1]
+posterior_pdf2=posterior_pdf2.update(data)
+pdfs.append(posterior_pdf2)
+shortcut.plot_gamma_pdf(pdfs, x, 'b')
+#Approach 2:MCMC

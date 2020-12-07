@@ -70,12 +70,13 @@ def plot_normal_pdf(pdfs, mu, color='b'):
     plt.show()
 
 def plot_gamma_pdf(pdfs, X, color='b'):
-    alpha = 1.0
+    alpha = 1
     for i in range(len(pdfs)):
         pdf = pdfs[i]
-        label = 'a=' + str(pdf.alpha) + ', var=' + str(pdf.beta)
+        label = 'a=' + str(pdf.alpha) + ', b=' + str(pdf.beta)
+        color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
         plt.plot(X, pdf.pdf(X), alpha = alpha, color=color, label=label)
-    plt.ylabel('density')
-    plt.xlabel('conversion rate')
+    plt.ylabel('Density')
+    plt.xlabel('Hypotheses for λ')
     plt.legend(numpoints=1, loc='upper right')
     plt.show()

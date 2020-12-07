@@ -23,13 +23,8 @@ class GammaExponential:
         self.alpha = alpha
         self.beta = beta
 
-    def update(self, *args):
-        if len(args) == 1:
-            return GammaExponential(self.alpha + len(args[0]), self.beta + sum(args[0]))
-        elif len(args) == 2:
-            return GammaExponential(self.alpha + args[0], self.beta + args[1])
-        else:
-            raise SyntaxError("Illegal number of arguments")
+    def update(self, obs):
+        return GammaExponential(self.alpha + sum(obs), self.beta + len(obs))
 
     def update_params(self, *args):
         if len(args) == 1:

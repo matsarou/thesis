@@ -104,24 +104,15 @@ class MCMC_Metropolis(MCMC.Engine):
         acceptance_rate = accepted / trials
         return acceptance_rate, trace
 
-def plot_prior(prior, hypos):
-    label = 'a0=' + str(prior.alpha) + ', b0=' + str(prior.beta)
-    plt.plot(prior.pdf(hypos), alpha=1.0, color='b', label=label)
-    plt.ylabel('density')
-    plt.xlabel('Hypotheses for λ')
-    plt.legend(numpoints=1, loc='upper right')
-    plt.show()
-
 prior = GammaExponential(2.1, 1.0)
 hypotheses = [0,1,2,3,4,5,6,7,8,9,10]
-plot_prior(prior,hypotheses)
 data = np.random.randint(0,20,35)
 data=[5]
 mu_init = prior.sample()
-trials=100
+trials=10000
 mcmc=MCMC_Metropolis()
 
-final_mcmc_trace = mcmc.sampler(trials=10, mu_init=mu_init, plot=True, prior=prior, data=data)
+final_mcmc_trace = mcmc.sampler2(trials=trials, tune_param=0.5, mu_init=mu_init, plot=True, prior=prior, data=data)
 print(final_mcmc_trace)
 
 data = {'Trial': mcmc.trials,
