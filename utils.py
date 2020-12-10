@@ -69,14 +69,30 @@ def plot_normal_pdf(pdfs, mu, color='b'):
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
 
-def plot_gamma_pdf(pdfs, X, color='b'):
+def plot_gamma_pdfs(pdfs, X, color='b'):
     alpha = 1
     for i in range(len(pdfs)):
         pdf = pdfs[i]
         label = 'a=' + str(pdf.alpha) + ', b=' + str(pdf.beta)
         color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
         plt.plot(X, pdf.pdf(X), alpha = alpha, color=color, label=label)
-    plt.ylabel('Density')
+    plt.ylabel('Probability density')
     plt.xlabel('Hypotheses for λ')
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
+
+def summarize_statistics(data):
+    #basic statistics
+    mean1=np.mean(data)
+    max1 = np.max(data)
+    min1 = np.min(data)
+    median1 = np.median(data)
+    std1 = np.std(data)
+    var1 = np.var(data)
+    # print block 1
+    print('Mean λ: ' + str(mean1))
+    print('Max λ: ' + str(max1))
+    print('Min λ: ' + str(min1))
+    print('Median λ: ' + str(median1))
+    print('Std λ: ' + str(std1))
+    print('Var λ: ' + str(var1))

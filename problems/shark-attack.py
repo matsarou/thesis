@@ -57,17 +57,23 @@ x = np.linspace(0, 300, 100)
 gamma_prior = GammaExponential(alpha=a0,beta=b0)
 engine = shortcut.GammaPoisson()
 pdfs = []
-# Add the uniform
 pdfs.append(gamma_prior)
 # Inference
 posterior_pdf1=gamma_prior.update(data)
 pdfs.append(posterior_pdf1)
+# utils.plot_gamma_pdfs(pdfs, x, 'b')
 
-# shortcut.plot_gamma_pdf(pdfs, x, 'b')
-
+# Inference after some new observations came into light
 data=[1,2,0,3,4]
 posterior_pdf2=pdfs[len(pdfs)-1]
 posterior_pdf2=posterior_pdf2.update(data)
 pdfs.append(posterior_pdf2)
-shortcut.plot_gamma_pdf(pdfs, x, 'b')
-#Approach 2:MCMC
+# utils.plot_gamma_pdfs(pdfs, x, 'b')
+
+#Approach 2:MCMC Metropolis, the estimated parameters are 7.542, 2.091
+a_mcmc=7.542
+b_mcmc=2.091
+mcmc_posterior = GammaExponential(alpha=a_mcmc,beta=b_mcmc)
+pdfs.remove(posterior_pdf2)
+pdfs.append(mcmc_posterior)
+utils.plot_gamma_pdfs(pdfs, x, 'b')

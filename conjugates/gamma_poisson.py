@@ -1,6 +1,6 @@
 from conjugates import InferenceEngine
 from distributions.GammaDistribution import GammaExponential
-from utils import plot_gamma_pdf
+from utils import plot_gamma_pdfs
 import copy
 import numpy as np
 

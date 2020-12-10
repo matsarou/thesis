@@ -69,10 +69,17 @@ class MCMC_Metropolis(MCMC.Engine):
             if(l_proposal<0):
                 print("Proposed negative λ for the poisson distribution")
                 continue
+
+            self.l_proposed.append(l_proposal)
+            self.l_current.append(l_current)
+
             # Compute posterior probability of proposed mu
             likelihood_proposal = poisson_pmf(data, l_proposal).prod()
             prior_proposal = prior.pdf(l_proposal)
             posterior_proposed = likelihood_proposal * prior_proposal
+
+            self.p_current.append(posterior_current)
+            self.p_proposed.append(posterior_proposed)
 
             # Accept proposal?
             ratio = posterior_proposed / posterior_current
@@ -93,10 +100,7 @@ class MCMC_Metropolis(MCMC.Engine):
             self.data.append(data)
             self.prior_param_alpha.append(prior.alpha)
             self.prior_param_beta.append(prior.beta)
-            self.l_current.append(l_current)
-            self.p_current.append(posterior_current)
-            self.l_proposed.append(l_proposal)
-            self.p_proposed.append(posterior_proposed)
+
             self.ratio.append(ratio)
             self.p_move.append(p_move)
             self.random.append(random)
@@ -112,7 +116,7 @@ mu_init = prior.sample()
 trials=10000
 mcmc=MCMC_Metropolis()
 
-final_mcmc_trace = mcmc.sampler2(trials=trials, tune_param=0.5, mu_init=mu_init, plot=True, prior=prior, data=data)
+final_mcmc_trace = mcmc.sampler2(trials=trials, tune_param=3.0, mu_init=mu_init, plot=True, prior=prior, data=data)
 print(final_mcmc_trace)
 
 data = {'Trial': mcmc.trials,
@@ -129,3 +133,7 @@ data = {'Trial': mcmc.trials,
         'λ accepted': mcmc.l_accepted
         }
 utils.export_csv(filepath='shark_attack_mcmc.csv', data=data)
+
+df = pd.DataFrame(data, columns=data.keys())
+
+utils.summarize_statistics(mcmc.l_accepted)
