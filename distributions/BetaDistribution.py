@@ -1,3 +1,4 @@
+import scipy
 from scipy import stats
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,13 +75,20 @@ class BetaDistribution:
         h = std_err * stats.t.ppf((1 + confidence) / 2, n - 1)
         return m - h, m + h
 
+    def credible_interval(self,credible_interval=0.95):
+        h= (1-credible_interval)/2
+        b_up = scipy.special.btdtri(self.a, self.b, credible_interval+h)
+        b_lo = scipy.special.btdtri(self.a, self.b, h)
+        return b_up, b_lo
+
     def sample(self):
         return np.random.beta(self.a, self.b)
 
     def show_plot(self, params):
         plt.plot(self.span, self.cdf(), alpha = 1.0, color=params['color'], label=params['label'])
         if self.n > 0 and self.mean() > 0.0:
-            lcb, ucb = self.conf_interval()
+            # lcb, ucb = self.conf_interval()
+            lcb, ucb = self.credible_interval()
             plt.fill_between(self.span, lcb, ucb, color='b', alpha=.1)
         plt.ylabel('density')
         plt.xlabel('conversion rate')
