@@ -57,6 +57,7 @@ class MCMC_Metropolis(MCMC.Engine):
         trace = [l_current]
         self.init_dataset()
         accepted = 0
+        burnin = 500
         for trial in range(1, trials+1, 1):
             # Compute posterior probability of current mu
             likelihood_current = poisson_pmf(data, l_current).prod()
@@ -70,16 +71,18 @@ class MCMC_Metropolis(MCMC.Engine):
                 print("Proposed negative λ for the poisson distribution")
                 continue
 
-            self.l_proposed.append(l_proposal)
-            self.l_current.append(l_current)
+            if trial >= burnin:
+                self.l_proposed.append(l_proposal)
+                self.l_current.append(l_current)
 
             # Compute posterior probability of proposed mu
             likelihood_proposal = poisson_pmf(data, l_proposal).prod()
             prior_proposal = prior.pdf(l_proposal)
             posterior_proposed = likelihood_proposal * prior_proposal
 
-            self.p_current.append(posterior_current)
-            self.p_proposed.append(posterior_proposed)
+            if trial >= burnin:
+                self.p_current.append(posterior_current)
+                self.p_proposed.append(posterior_proposed)
 
             # Accept proposal?
             ratio = posterior_proposed / posterior_current
@@ -93,19 +96,21 @@ class MCMC_Metropolis(MCMC.Engine):
                 # If the random number is less than the p_move,accept the proposed value of λ.
                 l_current = l_proposal
                 accepted += 1
-            trace.append(l_current)
+            if trial >= burnin:
+                trace.append(l_current)
 
-            #Build the dataset for demonstration reasons
-            self.trials.append(trial)
-            self.data.append(data)
-            self.prior_param_alpha.append(prior.alpha)
-            self.prior_param_beta.append(prior.beta)
+            if trial >= burnin:
+                #Build the dataset for demonstration reasons
+                self.trials.append(trial)
+                self.data.append(data)
+                self.prior_param_alpha.append(prior.alpha)
+                self.prior_param_beta.append(prior.beta)
 
-            self.ratio.append(ratio)
-            self.p_move.append(p_move)
-            self.random.append(random)
-            self.l_accepted.append(l_current)
-        acceptance_rate = accepted / trials
+                self.ratio.append(ratio)
+                self.p_move.append(p_move)
+                self.random.append(random)
+                self.l_accepted.append(l_current)
+        acceptance_rate = accepted / (trials-burnin)
         return acceptance_rate, trace
 
 prior = GammaExponential(2.1, 1.0)
@@ -137,3 +142,12 @@ utils.export_csv(filepath='shark_attack_mcmc.csv', data=data)
 df = pd.DataFrame(data, columns=data.keys())
 
 utils.summarize_statistics(mcmc.l_accepted)
+
+# calculate the Bayesian credible intervals for λ using the second method, the equal-tailed interval method.
+quantiles=[0.010,0.025,0.050,0.250,0.500,0.750,0.950,0.975,0.990]
+rows = []
+for q in quantiles:
+    rows.append({'Quantile': q, 'λ': df['λ accepted'].quantile(q)})
+quantile_df = pd.DataFrame(rows)
+print("Bayesian credible intervals")
+print(quantile_df.head(10))
