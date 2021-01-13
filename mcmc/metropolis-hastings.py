@@ -57,7 +57,7 @@ class MCMC_Hastings(MCMC.Engine):
             # Prior centered at mu-current
             prior_current = prior.pdf(mu_current)
             n = 1
-            likelihood_current = bionomial_pmf(1, data, mu_current).prod()# Compute likelihood by multiplying probabilities of each data point
+            likelihood_current = binom.pmf(data, n, mu_current).prod()# Compute likelihood by multiplying probabilities of each data point
             # posterior density of observing the data under the hypothesis that p_c=mu_current
             posterior_current = likelihood_current * prior_current
 
@@ -66,7 +66,7 @@ class MCMC_Hastings(MCMC.Engine):
             beta_center_p_current=BetaDistribution(get_moment_0(tune_param, mu_current), tune_param)
             mu_proposal = beta_center_p_current.sample()
             prior_proposal = prior.pdf(mu_proposal)
-            likelihood_proposal = bionomial_pmf(1, n, mu_proposal).prod()
+            likelihood_proposal = binom.pmf(data, n, mu_current).prod()
             posterior_proposed = likelihood_proposal * prior_proposal
 
             # Accept proposal?

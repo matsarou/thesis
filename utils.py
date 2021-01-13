@@ -18,6 +18,8 @@ def show_all(pdfs, color='b'):
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
 
+
+
 def data_serial(success_prob = 0.20, size = 100):
     return [1 if i <= success_prob else 0 for i in np.linspace(0,1,size)]
 
@@ -32,12 +34,11 @@ def random_list(success_prob = 0.20, size = 100):
         list = list[0:successes] + [1 for i in range(successes)] + list[2*successes:size]
     return list
 
-def random_samples(min, max, samples):
-    return np.linspace(min, max, samples)
+def random_samples(min, max, dtype, samples):
+    return np.linspace(min, max, samples, dtype=dtype)
 
-def normal_data(mean, stdev, size):
-    data = norm.rvs(10.0, 2.5, size=500)
-    return data
+def normal_data(mean, var, size):
+    return norm.rvs(mean, var, size=size)
 
 def gamma_data(gamma, size):
     data = gamma.rvs(size=size)
@@ -57,17 +58,28 @@ def export_csv(filepath, data):
     df = pd.DataFrame(data, columns=data.keys())
     df.to_csv(filepath)
 
-def plot_normal_pdf(pdfs, mu, color='b'):
-    alpha = 0.0
+def plot_normal_pdf(pdfs, mu, X, color='b'):
+    alpha = 0.5
     for i in range(len(pdfs)):
         pdf = pdfs[i]
         label = 'mean=' + str(pdf.mean) + ', var=' + str(pdf.var)
         alpha = alpha + (i+1)*0.10
-        plt.plot(pdf.pdf(mu), alpha = alpha, color=color, label=label)
+        plt.plot(X, pdf.pdf(X), alpha=alpha, color=color, label=label)
     plt.ylabel('density')
     plt.xlabel('conversion rate')
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
+
+def plot_multiple_pdfs(pdfs, color=None):
+    alpha = 0.0
+    for i in range(len(pdfs)):
+        beta = pdfs[i]
+        label = 'a=' + str(beta.a) + ', b=' + str(beta.b)
+        # alpha = alpha + (i + 1) * 0.10
+        if color==None:
+            color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
+        plt.plot(beta.span, beta.pdf(), alpha=alpha, color=color, label=label)
+    plt.legend(numpoints=1, loc='upper right')
 
 def plot_gamma_pdfs(pdfs, X, color='b'):
     alpha = 1

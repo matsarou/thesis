@@ -19,7 +19,8 @@ class NormalNormalKnownVar:
         self.mean = prior_mean
         self.var = prior_var
         self.known_var = known_var
-        self.data = np.log(data)
+        # self.data = np.log(data)
+        self.data = data
 
     def update(self, data):
         self.data = self.data + np.log(data)
@@ -33,13 +34,12 @@ class NormalNormalKnownVar:
                                     data = self.data)
 
     def update_params(self, known_var, mean, var):
-        data = self.data
-        n = len(data)
+        n = len(self.data)
         denom = var + n*known_var
         return NormalNormalKnownVar(known_var = known_var,
-                                    prior_mean = (mean * known_var + var*sum(data)) / denom,
+                                    prior_mean = (mean * var + known_var*sum(self.data)) / denom,
                                     prior_var = denom,
-                                    data = data)
+                                    data = self.data)
 
     def param_mu(self):
         return self.mean

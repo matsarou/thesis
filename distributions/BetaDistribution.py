@@ -10,8 +10,8 @@ class BetaDistribution:
         self.b = b
         self.n = 0
         self.data = []
-        # self.span = np.linspace(0, 1, 200)
-        self.span = np.linspace(self.ppf(0.0), self.ppf(0.99), 200)
+        self.span = np.linspace(0, 1, 200)
+        # self.span = np.linspace(self.ppf(0.0), self.ppf(0.99), 200)
 
     def update_params(self, data = []):
         self.data = self.data +data
@@ -34,8 +34,8 @@ class BetaDistribution:
     def pdf(self, x):
         return stats.beta.pdf(x, self.a, self.b)
 
-    # def pdf(self):
-    #     return stats.beta.pdf(self.span, self.a, self.b)
+    def pdf(self):
+        return stats.beta.pdf(self.span, self.a, self.b)
 
     def ppf(self, x):
         return stats.beta.ppf(x, self.a, self.b)
