@@ -76,20 +76,26 @@ class NormalNormalKnownVar:
 
 
 class NormalLogNormalKnownVar(NormalNormalKnownVar):
-    def update(self, data):
-        data = np.log(data)
-        var = np.var(data)
-        mean = np.mean(data)
-        n = len(data)
-        denom = (1.0 / self.var + n / self.known_var)
-        return NormalLogNormalKnownVar(self.known_var, (self.mean / self.var + sum(data) / self.known_var) / denom,
-                                       1.0 / denom)
+    # def update(self, data):
+    #     data = np.log(data)
+    #     var = np.var(data)
+    #     mean = np.mean(data)
+    #     n = len(data)
+    #     denom = (1.0 / self.var + n / self.known_var)
+    #     return NormalLogNormalKnownVar(self.known_var, (self.mean / self.var + sum(data) / self.known_var) / denom,
+    #                                    1.0 / denom)
 
     def predict(self, x):
         raise NotImplemented("No posterior predictive")
 
     def sample(self):
-        raise np.log(np.random.normal(self.mean, self.var + self.known_var))
+        while True:
+            float62 = np.log(np.random.normal(self.mean, self.var + self.known_var))
+            if float62:
+                return float62
+
+    def update(self):
+        pass
 
 
 class Normal():
@@ -98,7 +104,7 @@ class Normal():
         self.var = prior_var
 
     def sample(self):
-        return np.random.normal(self.mean, self.var)
+        return np.random.normal(self.mean, self.var)[0]
         # return np.random.normal(0, 0.1)
 
     def update(self):
