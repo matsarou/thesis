@@ -52,17 +52,17 @@ lst = []
 df1 = pd.DataFrame(lst, columns=header)
 for i in range(0,trials):
     # trial_error = calculate_prediction_error(observations[i], predictors[i], b0_trial.peek(), b1_trial.peek())
-    trial_error = gamma_tu.sum_error(y=observations, x=predictors, b0=b0_trial.peek(), b1=b1_trial.peek())
+    trial_error = round(gamma_tu.sum_error(y=observations, x=predictors, b0=b0_trial.peek(), b1=b1_trial.peek()),3)
     lst.append([i, b0_trial.peek(), b1_trial.peek(), tu_trial.peek(), trial_error])
     #update tu
     gamma_tu=gamma_tu.update(num=trials, y=observations, x=predictors, b0_trial=b0_trial.peek(), b1_trial=b1_trial.peek())
-    tu_trial.put(gamma_tu.sample())
+    tu_trial.put(round(gamma_tu.sample(),3))
     #update b0
     normal_b0 = normal_b0.update(n=trials, y = observations, x = predictors, tu_trial=tu_trial.peek(), b1_trial=b1_trial.peek())
     while True:
-        tu = gamma_tu.sample()
+        tu = normal_b0.sample()
         if tu > 0:
-            num = round(tu, 2)
+            num = round(tu, 3)
             b0_trial.put(num)
             break
     #update b1
@@ -70,7 +70,7 @@ for i in range(0,trials):
     while True:
         b1 = normal_b1.sample()
         if b1 > 0:
-            num = round(b1, 2)
+            num = round(b1, 3)
             b1_trial.put(num)
             break
 
