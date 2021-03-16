@@ -8,12 +8,11 @@ def sum_error(y, x, b1):
 class Normal(nd.NormalLogNormalKnownVar):
 
     def update(self, n, y, x, tu_trial, b1_trial):
-        tu0=self.var
+        tu0=self.known_var
         mu0=self.mean
-        print("Child class {}, {}".format(tu0,mu0))
         nominator=tu0*mu0+tu_trial*sum_error(y, x, b1_trial)
         denominator=tu0+n*tu_trial
         mu0_trial=nominator/denominator
         tu0_trial=denominator
-        return Normal(known_var=self.known_var, prior_mean=mu0_trial,prior_var=tu0_trial)
+        return Normal(known_var=tu0_trial, prior_mean=mu0_trial,prior_var=tu0_trial)
 

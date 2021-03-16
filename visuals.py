@@ -7,3 +7,6 @@ def pairplot(df, x_vars=[], y_vars=[]):
         sns.pairplot(data=df,
                  x_vars=x_vars,
                  y_vars=y_vars)
+
+def box_plot(df):
+    df.plot.box()
