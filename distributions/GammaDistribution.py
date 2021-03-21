@@ -70,7 +70,7 @@ class GammaExponential:
     def predict(self, x):
         return stats.lomax.cdf(1.0 / x, self.alpha, scale=1.0 / self.beta)
 
-    def rvs(self, size=0):
+    def rvs(self, size=1):
         return numpy.random.gamma(self.alpha, scale=1.0 / self.beta, size=size)
 
     def sample(self):
@@ -95,14 +95,13 @@ class GammaPoisson(GammaExponential):
         return np.random.poisson(lamda)
 
 class Gamma():
-    def __init__(self, a=0, b=1):
-        self.alpha = a
-        self.beta = b
+    def __init__(self, alpha=0, beta=1):
+        self.alpha = alpha
+        self.beta = beta
 
     def sample(self):
         lamda = np.random.gamma(self.alpha, 1 / self.beta)
         return np.random.exponential(1 / lamda)
-        # return np.random.gamma(self.alpha, self.beta, 1)
 
     def update(self):
         pass

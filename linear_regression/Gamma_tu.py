@@ -3,7 +3,7 @@ import decimal
 
 
 
-class Gamma(gd.Gamma):
+class Gamma(gd.GammaExponential):
     def sum_error(self, y, x, b0, b1):
         err = lambda y, x, b0, b1: pow((y - (b0 + b1 * x)), 2)
         result = sum([err(y[i], x[i], b0, b1) for i in range(len(x))])
@@ -15,5 +15,5 @@ class Gamma(gd.Gamma):
         print("Child class {}, {}".format(a0,b0))
         a_trial=a0+num/2
         b_trial=b0+self.sum_error(y, x, b0_trial, b1_trial)/2
-        return Gamma(a=a_trial, b=b_trial)
+        return Gamma(alpha=a_trial, beta=b_trial)
 
