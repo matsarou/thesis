@@ -13,99 +13,83 @@ except ModuleNotFoundError:
 
 
 class NormalNormalKnownVar:
-    __slots__ = ["mean", "var", "known_var", "data"]
+    __slots__ = ["mean", "var", "known_var"]
 
-    def __init__(self, known_var, prior_mean=0, prior_var=1, data = np.empty(1)):
+    def __init__(self, known_var, prior_mean=0, prior_var=1):
         self.mean = prior_mean
         self.var = prior_var
         self.known_var = known_var
-        # self.data = np.log(data)
-        self.data = data
 
     def update(self, data):
-        self.data = self.data + np.log(data)
-        # self.var = np.var(data)
-        self.mean = np.mean(data)
-        n = len(self.data)
-        denom = self.var + n*self.known_var
-        return NormalNormalKnownVar(known_var = self.known_var,
-                                    prior_mean = (self.mean * self.known_var + self.var*sum(self.data)) / denom,
-                                    prior_var = denom,
-                                    data = self.data)
-
-    def update_params(self, known_var, mean, var):
-        n = len(self.data)
-        denom = var + n*known_var
-        return NormalNormalKnownVar(known_var = known_var,
-                                    prior_mean = (mean * var + known_var*sum(self.data)) / denom,
-                                    prior_var = denom,
-                                    data = self.data)
-
-    def param_mu(self):
-        return self.mean
-
-    def param_tu(self):
-        return self.var
+        var = np.var(data)
+        mean = np.mean(data)
+        n = len(data)
+        denom = (1.0 / self.var + n / self.known_var)
+        return NormalNormalKnownVar(self.known_var, (self.mean / self.var + sum(data) / self.known_var) / denom,
+                                    1.0 / denom)
 
     def pdf(self, x):
-        return stats.norm.pdf(x, self.mean, self.var)
+        return stats.norm.pdf(x, self.mean, np.sqrt(self.var))
 
     def cdf(self, x):
-        return stats.norm.cdf(x, self.mean, self.var)
+        return stats.norm.cdf(x, self.mean, np.sqrt(self.var))
 
     def posterior(self, l, u):
         if l > u:
             return 0.0
         return self.cdf(u) - self.cdf(l)
 
+    def plot(self, l=0.0, u=1.0):
+        x = np.linspace(u, l, 1001)
+        y = stats.norm.pdf(x, self.mean, np.sqrt(self.var))
+        y = y / y.sum()
+        plt.plot(x, y)
+        plt.xlim((l, u))
+
     def predict(self, x):
-        return stats.norm.cdf(x, self.mean, self.var + self.known_var)
+        return stats.norm.cdf(x, self.mean, np.sqrt(self.var + self.known_var))
 
     def sample(self):
-        return np.random.normal(self.mean, self.var + self.known_var)
-
-    def plot(self, x, color, xlabel, ylabel, label, show = False):
-        if not label:
-            label = 'mu=' + str(self.mean) + ', stdev=' + str(self.known_var)
-        plt.plot(x, self.pdf(x), alpha=1, color=color, label=label)
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
-        plt.legend(numpoints=1, loc='upper right')
-        if show:
-            plt.show()
+        return np.random.normal(self.mean, np.sqrt(self.var + self.known_var))
 
 
 class NormalLogNormalKnownVar(NormalNormalKnownVar):
-    # def update(self, data):
-    #     data = np.log(data)
-    #     var = np.var(data)
-    #     mean = np.mean(data)
-    #     n = len(data)
-    #     denom = (1.0 / self.var + n / self.known_var)
-    #     return NormalLogNormalKnownVar(self.known_var, (self.mean / self.var + sum(data) / self.known_var) / denom,
-    #                                    1.0 / denom)
+    def update(self, data):
+        data = np.log(data)
+        var = np.var(data)
+        mean = np.mean(data)
+        n = len(data)
+        denom = (1.0 / self.var + n / self.known_var)
+        return NormalLogNormalKnownVar(self.known_var, (self.mean / self.var + sum(data) / self.known_var) / denom,
+                                       1.0 / denom)
 
     def predict(self, x):
         raise NotImplemented("No posterior predictive")
 
     def sample(self):
         while True:
-            float62 = np.log(np.random.normal(self.mean, self.var + self.known_var))
-            if float62:
-                return float62
+            s=np.log(np.random.normal(self.mean, np.sqrt(self.var + self.known_var)))
+            if not np.math.isnan(s):
+                return s
 
-    def update(self):
-        pass
-
-
-class Normal():
+class Normal(NormalNormalKnownVar):
     def __init__(self, prior_mean=0, prior_var=1):
         self.mean = prior_mean
         self.var = prior_var
 
     def sample(self):
-        return np.random.normal(self.mean, self.var)[0]
-        # return np.random.normal(0, 0.1)
+        while True:
+            random_value = np.random.normal(self.mean, self.var)
+            if not np.math.isnan(random_value):
+                return random_value
+
+class NormalNormalKnownPrecision(NormalNormalKnownVar):
+    __slots__ = ["mean", "var", "known_var"]
+
+    def __init__(self, known_var, prior_mean=0):
+        self.mean = prior_mean
+        self.var = 1/np.sqrt(known_var)
+        self.known_var = known_var
 
     def update(self):
         pass

@@ -102,7 +102,6 @@ def plot_credible_intervals(param1_df,param2_df,param3_df, x=[]):
     plt.plot(x, y_predicted_lo, linestyle='--', dashes=(5, 5), alpha=1.0, color='r')
     plt.ylabel('Success')
     plt.xlabel('Years')
-    plt.show()
 
 def plots(b0_post, b1_post, tu_post, variance):
     x = np.arange(0, 100)
