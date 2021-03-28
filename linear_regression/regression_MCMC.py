@@ -2,7 +2,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import custom_queue as cq
-from distributions.NormalDistribution import Normal
+from distributions.NormalDistribution import NormalNormalKnownPrecision
 from linear_regression.Gamma_tu import Gamma as Gamma_tu
 from linear_regression.Normal_b0 import Normal as Normal_b0
 from linear_regression.Normal_b1 import Normal as Normal_b1
@@ -20,8 +20,8 @@ def queues(size):
 
 def distributions():
     gamma_tu = Gamma_tu(alpha=0.01, beta=0.01)
-    normal_b0 = Normal_b0(known_var=0.0001, prior_mean=0.0, prior_var=0.0001)  # mean=0, precision=0.0001, stdev=100
-    normal_b1 = Normal_b1(known_var=0.0001, prior_mean=0.0, prior_var=0.0001)  # mean=0, precision=0.0001, stdev=100
+    normal_b0 = Normal_b0(known_var=0.0001, prior_mean=0.0)  # mean=0, precision=0.0001, stdev=100
+    normal_b1 = Normal_b1(known_var=0.0001, prior_mean=0.0)  # mean=0, precision=0.0001, stdev=100
     return gamma_tu, normal_b0, normal_b1
 
 def credible_intervals(y, credible_interval = 95):
@@ -52,8 +52,8 @@ def posterior_predictive_y(param1_df, param2_df, param3_df, x):
         y_i=[] #size 15
         for trial in range(len(param3_df)): # iterate through trials
             mean = param1_df[trial] + param2_df[trial] * x_i
-            tu = np.math.sqrt(1 / param3_df[trial])
-            posterior_distribution = Normal(mean, tu)
+            # tu = np.math.sqrt(1 / param3_df[trial])
+            posterior_distribution = NormalNormalKnownPrecision(prior_mean=mean, known_var=param3_df[trial])
             y_i.append(posterior_distribution.sample())
         up, lo = credible_intervals(y=y_i)
         y_predicted_up.append(up)
@@ -93,15 +93,15 @@ def process(samples=10, trials=100, burnin=50, observations=[], predictors=[]):
     df3 = df3.drop(labels=range(0, burnin), axis=0)
     return df3
 
-def plot_credible_intervals(param1_df,param2_df,param3_df, x=[]):
+def plot_credible_intervals(param1_df,param2_df,param3_df, ylabel, xlabel, x=[]):
     y_up, y_lo = posterior_y(param1_df, param2_df, x)
     y_predicted_up, y_predicted_lo=posterior_predictive_y(param1_df, param2_df, param3_df, x)
     plt.plot(x, y_up, linestyle='--', dashes=(5, 5), alpha=1.0, color='b')
     plt.plot(x, y_lo, linestyle='--', dashes=(5, 5), alpha=1.0, color='b')
     plt.plot(x, y_predicted_up, linestyle='--', dashes=(5, 5),alpha=1.0, color='r')
     plt.plot(x, y_predicted_lo, linestyle='--', dashes=(5, 5), alpha=1.0, color='r')
-    plt.ylabel('Success')
-    plt.xlabel('Years')
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
 
 def plots(b0_post, b1_post, tu_post, variance):
     x = np.arange(0, 100)

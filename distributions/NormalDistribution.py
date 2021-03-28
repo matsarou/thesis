@@ -84,12 +84,25 @@ class Normal(NormalNormalKnownVar):
                 return random_value
 
 class NormalNormalKnownPrecision(NormalNormalKnownVar):
-    __slots__ = ["mean", "var", "known_var"]
-
     def __init__(self, known_var, prior_mean=0):
         self.mean = prior_mean
-        self.var = 1/np.sqrt(known_var)
-        self.known_var = known_var
+        self.known_var = 1/np.sqrt(known_var)
 
     def update(self):
         pass
+
+    def pdf(self, x):
+        return stats.norm.pdf(x, self.mean, np.sqrt(self.known_var))
+
+    def sample(self):
+        return np.random.normal(self.mean, np.sqrt(self.known_var))
+
+class NormalLogNormalKnownPrecision(NormalNormalKnownPrecision):
+    def pdf(self, x):
+        return np.log(stats.norm.pdf(x, self.mean, np.sqrt(self.known_var)))
+
+    def sample(self):
+        while True:
+            s=np.log(np.random.normal(self.mean, np.sqrt(self.known_var)))
+            if not np.math.isnan(s):
+                return s

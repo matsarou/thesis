@@ -10,7 +10,7 @@ def sum_x(x):
     result = sum(sum_f(x[i]) for i in range(len(x)))
     return result
 
-class Normal(nd.NormalLogNormalKnownVar):
+class Normal(nd.NormalLogNormalKnownPrecision):
 
     def update(self, y, x, tu_trial, b0_trial):
         tu1=self.known_var
@@ -20,5 +20,5 @@ class Normal(nd.NormalLogNormalKnownVar):
         denominator=tu1+tu_trial*sum_x(x)
         mu1_trial=nominator/denominator
         tu1_trial=denominator
-        return Normal(known_var=tu1_trial, prior_mean=mu1_trial,prior_var=tu1_trial)
+        return Normal(known_var=tu1_trial, prior_mean=mu1_trial)
 

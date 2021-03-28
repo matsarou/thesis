@@ -5,7 +5,7 @@ def sum_error(y, x, b1):
     result = sum([err(y[i], x[i], b1) for i in range(len(x))])
     return result
 
-class Normal(nd.NormalLogNormalKnownVar):
+class Normal(nd.NormalLogNormalKnownPrecision):
 
     def update(self, n, y, x, tu_trial, b1_trial):
         tu0=self.known_var
@@ -14,5 +14,5 @@ class Normal(nd.NormalLogNormalKnownVar):
         denominator=tu0+n*tu_trial
         mu0_trial=nominator/denominator
         tu0_trial=denominator
-        return Normal(known_var=tu0_trial, prior_mean=mu0_trial,prior_var=tu0_trial)
+        return Normal(known_var=tu0_trial, prior_mean=mu0_trial)
 
