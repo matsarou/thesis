@@ -31,6 +31,8 @@ class Engine():
         color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
         plt.plot(trace, marker='o', color=color, label=label)
         plt.legend(numpoints=1, loc='upper right')
+        plt.xlabel('trial')
+        plt.ylabel('value')
 
     def sampler2(self, trials=4, mu_init=.5, prior=None, tune_param = 0.5, max_tune_param=10.0, data=None, plot=False):
         if plot:
