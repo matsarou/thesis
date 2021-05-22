@@ -2,7 +2,7 @@ import csv
 import os
 from functools import reduce
 
-import numpy
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
@@ -57,7 +57,7 @@ def model_fit(param1_df,param2_df,param3_df,x):
     x=x.values.flatten()
     # print the likelihood L, the log likelihood lnL, and the −2 log likelihood −2 lnL
     model_likelihood,model_likelihood_log2 = likelihoods(param1_df, param2_df, param3_df, x, func=lambda x, y: x * y)
-    model_likelihood_negative_log2 = list(-2*numpy.array(model_likelihood_log2))
+    model_likelihood_negative_log2 = list(-2*np.array(model_likelihood_log2))
     rows = zip(model_likelihood, model_likelihood_log2, model_likelihood_negative_log2)
     csv_header = ['Likelihood', 'ln(Likelihood)', '-2ln(Likelihood))']
     if not os.path.exists('model_fit_Years in School.csv'):
@@ -88,10 +88,31 @@ def likelihoods(param1_df, param2_df, param3_df, x, func):
         model_likelihood_log2.append(reduce(lambda x, y: x + y, log2_likelihood_observations))
     return model_likelihood, model_likelihood_log2
 
+def back_transform_mcmc_params(x, y, params1_df, params2_df):
+    y_mean = np.mean(y)
+    x_mean = np.mean(x)
+    std_factor = np.std(y)/np.std(x)
+    params1_df_transf=[]
+    params2_df_transf=[]
+    for i in range(len(params1_df)):
+        params1_df_transf.append(y_mean - params2_df[i]*std_factor*x_mean)
+        params2_df_transf.append(params2_df[i] * std_factor)
+    return params1_df_transf,params2_df_transf
+
 def lin_regression_MCMC(dataset,predictor_column):
+    copy=pd.DataFrame.copy(dataset)
+    y=copy['Success']
+    x=copy[predictor_column]
+    dataset['Success'] = utils.standardize_data(data=dataset['Success'])
+    dataset[predictor] = utils.standardize_data(data=dataset[predictor])
     observations = list(dataset['Success'])
     predictors = list(dataset[predictor_column])
     results_df = mcmc_regression.process(trials=200, samples=15, burnin=50, observations=observations, predictors=predictors)
+    params1_back_transf,params2_back_transf = back_transform_mcmc_params(x=x, y=y,
+                                                                         params1_df=list(results_df['b0 Proposal Distribution']),
+                                                                         params2_df=list(results_df['b1 Proposal Distribution']))
+    results_df['b0 Proposal Distribution'] = params1_back_transf
+    results_df['b1 Proposal Distribution'] = params2_back_transf
     print(results_df.head(5))
     return results_df
 
@@ -103,8 +124,8 @@ def analyze_model(estimations_filepath, predictors):
     summarize_statistics(
         values=[mcmc_df['b0 Proposal Distribution'], mcmc_df['b1 Proposal Distribution'], mcmc_df['τ Proposal Distribution']],
         header=['b0','b1','τ'],
-        filepath="./statistics/proposals_summary_grit_model.csv")
-    # plt.show()
+        filepath="./statistics/proposals_summary_years_model.csv")
+    plt.show()
     mcmc_regression.plot_credible_intervals(list(mcmc_df['b0 Proposal Distribution']),
                                             list(mcmc_df['b1 Proposal Distribution']),
                                             list(mcmc_df['τ Proposal Distribution']),
@@ -121,14 +142,16 @@ def analyze_model(estimations_filepath, predictors):
                          filepath="./statistics/fit_statistics_grit_model.csv")
 
 if __name__ == "__main__":
-    dataset = load_data(input_path='data.csv', separator=',')
+
     # visuals.box_plot(dataset)
     # visuals.pairplot(dataset, ['IQ', 'Years in School', 'Grit'], ['Success'])
-    possible_predictors = ['Grit']
+    possible_predictors = ['Years in School']
     for predictor in possible_predictors:
-        sorted_dataset = dataset.sort_values(by=predictor)
+        dataset = load_data(input_path='data.csv', separator=',')
+        dataset = dataset.sort_values(by=predictor)
+        copy=pd.DataFrame.copy(dataset)
         results_filepath=MCMC_RESULTS_PATH+predictor+'.csv'
         if not os.path.exists(results_filepath):
-            mcmc_model = lin_regression_MCMC(sorted_dataset, predictor)
+            mcmc_model = lin_regression_MCMC(copy, predictor)
             mcmc_model.to_csv(results_filepath)
-        analyze_model(results_filepath, sorted_dataset[[predictor]])
+        analyze_model(results_filepath, dataset[[predictor]])
