@@ -3,7 +3,7 @@ from scipy.stats import poisson
 import conjugates.gamma_poisson as shortcut
 
 import utils
-from distributions.GammaDistribution import GammaExponential, Gamma
+from distributions.GammaDistribution import GammaExponential
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -49,7 +49,7 @@ b0=1.0
 
 #Collect our data. This year we observed 5 shark attack. Plot the likelihood
 data=[5]
-# plot_poisson_pmf(hypotheses, 5)
+plot_poisson_pmf(hypotheses, 5)
 
 #Compute the posterior
 #Approach 1:Shortcuts

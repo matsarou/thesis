@@ -114,8 +114,6 @@ class MCMC_Metropolis(MCMC.Engine):
         return acceptance_rate, trace
 
 prior = GammaExponential(2.1, 1.0)
-hypotheses = [0,1,2,3,4,5,6,7,8,9,10]
-data = np.random.randint(0,20,35)
 data=[5]
 mu_init = prior.sample()
 trials=10000

@@ -1,10 +1,13 @@
 import random
+from functools import reduce
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import norm, gamma
 
-from distributions.NormalDistribution import NormalNormalKnownVar
+from distributions.NormalDistribution import NormalNormalKnownPrecisionConj,NormalLogNormalKnownPrecision
+
 
 def show_all(pdfs, color='b'):
     alpha = 0.0
@@ -58,7 +61,7 @@ def export_csv(filepath, data):
     df = pd.DataFrame(data, columns=data.keys())
     df.to_csv(filepath)
 
-def plot_normal_pdf(pdfs, mu, X, color='b'):
+def plot_normal_pdf(pdfs, X, color='b'):
     alpha = 0.5
     for i in range(len(pdfs)):
         pdf = pdfs[i]
@@ -93,18 +96,44 @@ def plot_gamma_pdfs(pdfs, X, color='b'):
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
 
-def summarize_statistics(data):
+def summarize_statistics(data,printStat=True):
     #basic statistics
     mean1=np.mean(data)
     max1 = np.max(data)
     min1 = np.min(data)
     median1 = np.median(data)
     std1 = np.std(data)
-    var1 = np.var(data)
+    mode1 = np.max(data)
     # print block 1
-    print('Mean λ: ' + str(mean1))
-    print('Max λ: ' + str(max1))
-    print('Min λ: ' + str(min1))
-    print('Median λ: ' + str(median1))
-    print('Std λ: ' + str(std1))
-    print('Var λ: ' + str(var1))
+    if printStat:
+        print('Mean λ: ' + str(mean1))
+        print('Max λ: ' + str(max1))
+        print('Min λ: ' + str(min1))
+        print('Median λ: ' + str(median1))
+        print('Std λ: ' + str(std1))
+        print('Mode λ: ' + str(mode1))
+    return min1,max1,mean1,median1,std1,mode1
+
+def standardize_data(data):
+    mean = np.mean(data)
+    std = np.std(data)
+    new_data = data.map(lambda y: (y-mean)/std)
+    return new_data
+
+def likelihood_statistic_all_levels_x(param1,param2,param3,x=[]):
+    log2_likelihood_observations = []
+    for i in range(len(x)):
+        norm_log_distribution = NormalNormalKnownPrecisionConj(known_prec=param3, mean=param1 + param2 * x[i], prec=param3)
+        # norm_log_distribution = NormalLogNormalKnownPrecision(known_var=param3, prior_mean=param1 + param2 * x[i])
+        log2_likelihood_observations.append(norm_log_distribution.pdf(x[i]))
+    result = reduce(lambda x, y: x + y, log2_likelihood_observations)
+    return result
+
+if __name__ == "__main__":
+    X = [12, 14, 18, 10, 13, 22, 17, 15, 16, 9, 19, 8, 20, 11, 21]
+    lk_Years = -2*likelihood_statistic_all_levels_x(param1=3.269084, param2=0.785819, param3=0.001567, x=X)
+    print("Years=",lk_Years)
+
+    X_G = [2.2, 3.2, 3.4, 1.8, 2.8, 0.2, 4.4, 1, 4.6, 0.4, 1.60, 1.2, 0.6, 4.2]
+    lk_Grit = -2*likelihood_statistic_all_levels_x(param1=3.487, param2=2.561413, param3=0.001083, x=X_G)
+    print("Grit=",lk_Grit)
