@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class BetaDistribution:
 
-    def __init__(self, a=1, b=1):
+    def __init__(self, a=0.5, b=0.5):
         self.a = a
         self.b = b
         self.n = 0

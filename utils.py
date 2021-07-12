@@ -4,7 +4,7 @@ from functools import reduce
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import norm, gamma
+from scipy.stats import norm, binom
 
 from distributions.NormalDistribution import NormalNormalKnownPrecisionConj,NormalLogNormalKnownPrecision
 
@@ -83,6 +83,10 @@ def plot_multiple_pdfs(pdfs, color=None):
             color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
         plt.plot(beta.span, beta.pdf(), alpha=alpha, color=color, label=label)
     plt.legend(numpoints=1, loc='upper right')
+
+def bionomial_pmf(x, n, p):
+    binomial = binom.pmf(x, n, p)
+    return binomial
 
 def plot_gamma_pdfs(pdfs, X, color='b'):
     alpha = 1

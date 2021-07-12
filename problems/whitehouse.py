@@ -22,12 +22,18 @@ def plot_random_priors():
     plt.legend(numpoints=1, loc='upper right')
     plt.show()
 
+from scipy.special import btdtri
 def naive_hpd(post):
-    HPD = np.percentile(post, [2.5, 97.5])
-    plt.plot(HPD, [0, 0], label='HPD {:.2f} {:.2f}'.format(*HPD),
-      linewidth=8, color='k')
+    # HPD = np.percentile(post, [2.5, 97.5])
+    b_up = btdtri(post.a, post.b, 0.95)
+    b_lo = btdtri(post.a, post.b, 0.05)
+    print("b_up={0}, b_lo={1}".format(b_up,b_lo))
+    plt.plot(post.pdf(), color='b') #label='Posterior a='+post.a+', b='+post.b
+    plt.fill_between(post.span, b_lo, b_up, color='b', alpha=.1)
+    # plt.plot(HPD, [0, 0], label='HPD {:.2f} {:.2f}'.format(*HPD),
+    #   linewidth=8, color='k')
     plt.legend(fontsize=16);
-    plt.xlabel(r"$\theta$", fontsize=14)
+    plt.xlabel("Hypotheses for p")
     plt.gca().axes.get_yaxis().set_ticks([])
 
 #Collect data
